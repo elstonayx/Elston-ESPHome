@@ -33,7 +33,7 @@ button:
           code: "0101001100101100101111000"
   - platform: template
     id: fan_off
-    name: "Fan Toggle"
+    name: "Fan Off"
     on_press:
       - remote_transmitter.transmit_rc_switch_raw:
           <<: *rf_raw_config
