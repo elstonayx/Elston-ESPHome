@@ -1,0 +1,114 @@
+#######################################
+# IR and RF Controller for Fan and AC #
+#######################################
+
+esphome:
+  name: elstonb_irrfremote
+  comment: Bedroom IR and RF Controller
+
+esp8266:
+  board: nodemcuv2
+
+<<: !include ../common/base.yaml
+
+.rf_raw_config: &rf_raw_config
+  protocol:
+    pulse_length: 247
+    sync: [0, 0]
+  repeat:
+    times: 5
+    wait_time: 8500us
+
+remote_transmitter:
+  pin: D1
+  carrier_duty_percent: 100%
+
+button:
+  - platform: template
+    id: fan_light_toggle
+    name: "Fan Light Toggle"
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          <<: *rf_raw_config
+          code: "0101001100101100101111000"
+  - platform: template
+    id: fan_off
+    name: "Fan Toggle"
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          <<: *rf_raw_config
+          code: "0101001100101100000000010"
+  - platform: template
+    name: "Fan Speed 1"
+    id: fan_1
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          <<: *rf_raw_config
+          code: "0101001100101100000000000"
+  - platform: template
+    name: "Fan Speed 2"
+    id: fan_2
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          <<: *rf_raw_config
+          code: "0101001100101100000101010"
+  - platform: template
+    name: "Fan Speed 3"
+    id: fan_3
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          <<: *rf_raw_config
+          code: "0101001100101100000011010"
+  - platform: template
+    name: "Fan Speed 4"
+    id: fan_4
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          <<: *rf_raw_config
+          code: "0101001100101100000010010"
+  - platform: template
+    name: "Fan Speed 5"
+    id: fan_5
+    on_press:
+      - remote_transmitter.transmit_rc_switch_raw:
+          <<: *rf_raw_config
+          code: "0101001100101100000010100"
+
+output:
+  - platform: template
+    id: fanoutput
+    type: float
+    write_action:
+      - lambda: ""
+  - platform: template
+    type: binary
+    id: lightoutput
+    write_action:
+      - lambda: ""
+
+fan:
+  - platform: speed
+    output: fanoutput
+    id: elstonb_fan
+    name: "Elston's Bedroom Fan"
+    speed_count: 5
+    on_turn_off:
+      - lambda: id(fan_off).press();
+    on_speed_set:
+      - lambda: |-
+          if      (id(elstonb_fan).state == 0) {}
+          else if (id(elstonb_fan).speed == 1) { id(fan_1).press(); }
+          else if (id(elstonb_fan).speed == 2) { id(fan_2).press(); }
+          else if (id(elstonb_fan).speed == 3) { id(fan_3).press(); }
+          else if (id(elstonb_fan).speed == 4) { id(fan_4).press(); }
+          else if (id(elstonb_fan).speed == 5) { id(fan_5).press(); }
+
+light:
+  - platform: binary
+    output: lightoutput
+    name: "Elston's Bedroom Light"
+    id: elstonb_light
+    on_turn_on:
+      - lambda: id(fan_light_toggle).press();
+    on_turn_off:
+      - lambda: id(fan_light_toggle).press();
